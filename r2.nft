@@ -2,7 +2,6 @@
 
 flush ruleset
 
-# Define table at r1
 table ip filter_for_r2 {
     # Define chains
     chain forwarding {
