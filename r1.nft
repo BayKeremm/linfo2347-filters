@@ -1,0 +1,18 @@
+#!/usr/sbin/nft -f                                                     
+                                                                       
+flush ruleset                                                          
+                                                                       
+# Define table at r1                                                   
+table ip filter_for_r1 {                                               
+    # Define chains                                                    
+    chain forwarding {                                                 
+        type filter hook forward priority 0; policy drop;              
+        icmp type echo-request ip saddr {10.1.0.2, 10.1.0.3} accept    
+        icmp type echo-request counter drop                            
+                                                                       
+        ip saddr 10.2.0.0/24 drop                                      
+                                                                       
+        ct state {new, established, related } accept                   
+    }                                                                  
+                                                                       
+}
