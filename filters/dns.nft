@@ -4,13 +4,20 @@ flush ruleset
 
 
 # Define table at dmz servers
-table ip http_filter {
+table ip dns_filter {
+    set denylist {                                                                  
+        type ipv4_addr; flags dynamic, timeout; timeout 5m;                         
+    }                                                                               
     # Chain INPUT
     chain input {
         # Chain configuration
         type filter hook input priority 0; policy drop;
-
+        
         ### RULES ###
+        
+        ip saddr @denylist drop                                                     
+
+        tcp dport 22 ct state new, untracked limit rate over 3/minute add @denylist { ip saddr } 
         tcp dport {22, 5252} accept
         icmp type echo-request counter accept                    
 
