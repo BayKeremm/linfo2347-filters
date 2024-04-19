@@ -9,6 +9,7 @@ apc:apc
 admin:nas
 Root:wago
 Admin:wago
+mininet:mininet
 User:user
 Guest:guest
 ftp:ftp

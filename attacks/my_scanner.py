@@ -1,6 +1,26 @@
 import socket                                                               
 import sys                                                                  
-                                                                            
+from scapy.all import ARP, Ether, srp
+
+'''
+target ranges:
+    10.12.0.0/24
+    10.1.0.0/24
+'''
+
+# ARP request does not cross a router
+#   can only send and receive arp request in the local network
+def arp_scan(ip_range):
+    packet = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=ip_range)
+    answers = srp(packet, timeout=2, retry=1)[0]
+    result = []
+
+    for sent, received in answers:
+        result.append({'IP': received.psrc, 'MAC': received.hwsrc})
+
+    for res in result:
+        print("{:16}    {}".format(res['IP'], res['MAC']))
+    return result
                                                                             
 def scan_ip(ip, start_port, end_port):                                      
     ret = tcp_scan(ip, start_port, end_port)                                
@@ -36,11 +56,15 @@ def tcp_scan(ip, start_port, end_port):
         except Exception as e:                                              
             print(f"Error scanning port {port}: {e}")                       
     return open_ports                                                       
-                                                                            
-                                                                            
-if __name__=='__main__':                                                    
-    socket.setdefaulttimeout(0.02)                                          
-    ip = "10.12.0.0/24"                                                     
+
+def main():
+    socket.setdefaulttimeout(0.01)                                          
+    ip = "192.168.1.0/24"                                                     
     start = 0                                                               
     end = 150                                                               
     scan_range(ip,start,end)                                                
+
+                                                                            
+if __name__=='__main__':                                                    
+    ip = "192.168.1.0/24"                                                     
+    arp_scan(ip)
