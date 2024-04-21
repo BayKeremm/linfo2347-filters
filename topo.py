@@ -79,7 +79,7 @@ def start_services(net: Mininet) -> None:
     # FTP server
     info(net['ftp'].cmd("/usr/sbin/vsftpd &"))
 
-    # Filters
+    # Apply the filers
     info(net['r1'].cmd("nft -f ./filters/r1.nft"))
     info(net['http'].cmd("nft -f ./filters/http.nft"))
     info(net['dns'].cmd("nft -f ./filters/dns.nft"))

@@ -17,8 +17,8 @@ table ip ftp_filter {
         ### RULES ###                                                               
         ip saddr @denylist drop                                                     
         
-        tcp dport {20,21,22} ct state new, untracked limit rate over 3/minute add @denylist { ip saddr } 
-        tcp dport {20, 21, 22} accept
+        tcp dport {21,22} ct state new, untracked limit rate over 3/minute add @denylist { ip saddr } 
+        tcp dport {21, 22} accept
         icmp type echo-request counter accept                    
 
     }

@@ -7,14 +7,13 @@ target ranges:
     10.12.0.0/24
     10.1.0.0/24
 '''
-
+file_name = "scan_results.txt"
 # ARP request does not cross a router
 #   can only send and receive arp request in the local network
 def arp_scan(ip_range):
     packet = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=ip_range)
     answers = srp(packet, timeout=2, retry=1)[0]
     result = []
-
     for sent, received in answers:
         result.append({'IP': received.psrc, 'MAC': received.hwsrc})
 
@@ -23,11 +22,15 @@ def arp_scan(ip_range):
     return result
                                                                             
 def scan_ip(ip, start_port, end_port):                                      
+    f = open(file_name, "a")
     ret = tcp_scan(ip, start_port, end_port)                                
     if len(ret) != 0:                                                       
+        p.write(ip)
         print(f"IP address {ip} has open ports: ")                          
         for port in ret:                                                    
+            p.write(":"+port)
             print(f"- {port}")                                              
+    f.close()
                                                                             
 def scan_range(ip_range, start_port, end_port):                             
     l = ip_range.split('/')                                                 
@@ -59,12 +62,14 @@ def tcp_scan(ip, start_port, end_port):
 
 def main():
     socket.setdefaulttimeout(0.01)                                          
-    ip = "192.168.1.0/24"                                                     
+    ips = ["10.1.0.0/24","10.12.0.0/24" ]
     start = 0                                                               
-    end = 150                                                               
-    scan_range(ip,start,end)                                                
+    end = 100                                                              
+    for ip in ips: 
+        scan_range(ip,start,end)                                                
 
                                                                             
 if __name__=='__main__':                                                    
-    ip = "192.168.1.0/24"                                                     
-    arp_scan(ip)
+    main()
+    #ip = "192.168.1.0/24"                                                     
+    #arp_scan(ip)
