@@ -80,11 +80,11 @@ def start_services(net: Mininet) -> None:
     info(net['ftp'].cmd("/usr/sbin/vsftpd &"))
 
     # Apply the filers
-    info(net['r1'].cmd("nft -f ./filters/r1.nft"))
-    info(net['http'].cmd("nft -f ./filters/http.nft"))
-    info(net['dns'].cmd("nft -f ./filters/dns.nft"))
-    info(net['ntp'].cmd("nft -f ./filters/ntp.nft"))
-    info(net['ftp'].cmd("nft -f ./filters/ftp.nft"))
+    info(net['r1'].cmd("nft -f ./filters/normal_op/r1.nft"))
+    info(net['http'].cmd("nft -f ./filters/normal_op/http.nft"))
+    info(net['dns'].cmd("nft -f ./filters/normal_op/dns.nft"))
+    info(net['ntp'].cmd("nft -f ./filters/normal_op/ntp.nft"))
+    info(net['ftp'].cmd("nft -f ./filters/normal_op/ftp.nft"))
 
     # SSH server on all servers
     cmd = "/usr/sbin/sshd -D &"
