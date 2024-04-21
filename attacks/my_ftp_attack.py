@@ -54,7 +54,7 @@ def ftp_brute_force(targets, ftp_list):
 
 
 if __name__ == "__main__":
-    users = read_file_to_list("./linfo2347-network-attacks/attacks/wordlists/ftp_list.txt")
+    l = read_file_to_list("./linfo2347-network-attacks/attacks/wordlists/ftp_list.txt")
     targets = read_targets()
     if len(targets) == 0:
         print("Please run network scan attack first, scan_result.txt file is empty ")
