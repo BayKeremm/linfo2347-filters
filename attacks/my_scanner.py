@@ -1,6 +1,7 @@
 import socket                                                               
 import sys                                                                  
 from scapy.all import ARP, Ether, srp
+import os
 
 '''
 target ranges:
@@ -25,11 +26,12 @@ def scan_ip(ip, start_port, end_port):
     f = open(file_name, "a")
     ret = tcp_scan(ip, start_port, end_port)                                
     if len(ret) != 0:                                                       
-        p.write(ip)
+        f.write(ip)
         print(f"IP address {ip} has open ports: ")                          
         for port in ret:                                                    
-            p.write(":"+port)
+            f.write(":"+str(port))
             print(f"- {port}")                                              
+        f.write("\n")
     f.close()
                                                                             
 def scan_range(ip_range, start_port, end_port):                             
@@ -39,7 +41,7 @@ def scan_range(ip_range, start_port, end_port):
         print("Does not support subnet mask != 24")                         
         exit()                                                              
     begin = l[0][:-1]                                                       
-    for i in range(1,50):                                                   
+    for i in range(1,50): # Normally 1 to 255 but it takes too long 
         ip = begin + str(i)                                                 
         scan_ip(ip, start_port, end_port)                                   
                                                                             
@@ -62,7 +64,7 @@ def tcp_scan(ip, start_port, end_port):
 
 def main():
     socket.setdefaulttimeout(0.01)                                          
-    ips = ["10.1.0.0/24","10.12.0.0/24" ]
+    ips = ["10.12.0.0/24", "10.1.0.0/24" ]
     start = 0                                                               
     end = 100                                                              
     for ip in ips: 
@@ -70,6 +72,10 @@ def main():
 
                                                                             
 if __name__=='__main__':                                                    
+    try:
+        os.remove("/home/mininet/LINFO2347/scan_results.txt")
+    except Exception:
+        pass
     main()
     #ip = "192.168.1.0/24"                                                     
     #arp_scan(ip)
