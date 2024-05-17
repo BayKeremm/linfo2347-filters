@@ -141,16 +141,46 @@ internet python3 ./linfo2347-network-attacks/attacks/my_ftp_attack.py
 If we put the correct credentials again, the script exits like the following:
 ![alt text](./images/image-2.png)
 
+#### Arp cache poisoning
+This attack starts from the dns server and targets the http server.
+Similarly to SSH and FTP bruteforece, for this attack, we first need to scan for the disponible mac address from the hosts that use the same router as us. 
+```bash
+dns python3 ./linfo2347-network-attacks/attacks/my_arp_scan.py
+```
+The result will be outputed in the file `arp_res.txt` and used by the attack.
+```bash
+dns python3 ./linfo2347-network-attacks/attacks/my_arp_poisoning.py &
+```
+
+#### Reflected DoS
+This attack comes from the internet and target the host ws2. The internet will spam the dns host with dns queries for url "random_string".example.com.
+
+```bash
+internet python3 ./linfo2347-network-attacks/attacks/my_dns_rdos.py &
+```
+
 ### Protections
 #### Setup
 We would need to update the nft scripts running on the hosts. Router 1 has no changes in its firewall (Run the commands one by one).
+**SSH and FTP brute force**
 ``` bash
 dns nft -f linfo2347-network-attacks/filters/protected_op/dns.nft 
 http nft -f linfo2347-network-attacks/filters/protected_op/http.nft 
 ftp nft -f linfo2347-network-attacks/filters/protected_op/ftp.nft 
 ntp nft -f linfo2347-network-attacks/filters/protected_op/ntp.nft
 ```
-#### SSH brute and FTP brute force
+**ARP cache poisoning**
+``` bash
+pingall
+http nft -f linfo2347-network-attacks/filters/protected_op/httparp.nft
+http ./linfo2347-network-attacks/filters/protected_op/http_arp.sh 
+```
+**Reflected Dos**
+``` bash
+dns nft -f linfo2347-network-attacks/filters/protected_op/dnsrdos.nft
+```
+
+#### SSH and FTP brute force
 The protections for these two attacks follow the same principle. We block the ip that makes requests with a rate over 3/minute. This ip is then blocked for 5 minutes.
 
 **Example for the http server**:
@@ -195,3 +225,78 @@ http nft list ruleset | less
 We see the following output. The denylist has elements and we can see the internet's ip address there with a countdown of 5 mins.
 
 ![alt text](./images/image-4.png)
+
+#### Arp cache poisoning
+For this attack we determined authorized mac addresses. Those addresses are found on the Arp table of the http server after a pingall.
+\
+The nftable will allow only the arp requests coming from those authorized addresses by adding a new table to the initial table. 
+
+```nft
+#!/usr/sbin/nft -f      
+flush ruleset
+
+# Define table at dmz servers
+table ip http_filter {
+    # Chain INPUT
+    chain input {
+        # Chain configuration
+        type filter hook input priority 0; policy drop;
+        tcp dport {22, 80} accept
+        icmp type echo-request counter accept
+    }
+    # Define chains
+    chain outputting {
+        type filter hook output priority 0; policy drop;
+        icmp type echo-request counter drop
+
+        ct state { established, related } accept
+    }
+}
+    ### ADDED TABLE ###
+table arp http_arp_filter {
+    set authorized {
+        type ether_addr
+    }
+    chain input {
+        # Chain configuration
+        type filter hook input priority 0; policy drop;
+        ether saddr @authorized accept
+    }
+}
+```
+**Note:** The protection will not work if the script is run after the attack because the attackers mac address will be added in the authorized addresses.
+#### Redirected DoS
+As for the SSH and FTP brute force, we block the addresses that makes too many requests. Here we put limit 1000 upd requests per minute.
+
+```nft
+#!/usr/sbin/nft -f
+flush ruleset
+
+table ip dns_filter {
+    set denylist {
+        type ipv4_addr; flags dynamic, timeout; timeout 5m;
+    }
+    # Chain INPUT
+    chain input {
+        # Chain configuration
+        type filter hook input priority 0; policy drop;
+
+        ### RULES ###
+	ip saddr @denylist drop
+
+            ### PROTECTION ###
+	udp dport {53, 5353} limit rate over 1000/minute add @denylist { ip saddr }
+	udp dport {53, 5353} accept
+	tcp dport{22,5252} accept
+        icmp type echo-request counter accept
+
+    }
+    # Define chains
+    chain outputting {
+        type filter hook output priority 0; policy drop;
+        icmp type echo-request counter drop
+
+        ct state { established, related } accept
+    }
+}
+```
